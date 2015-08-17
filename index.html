@@ -3,7 +3,7 @@
 <link href="example/example.css" rel="stylesheet" type="text/css">
 <title>knockout-dragula</title>
 
-<div class="parent" data-bind="dragula: { data: items1, group: 'test' }">
+<div class="parent" data-bind="dragula: { data: items1, group: 'test', afterMove: afterMove }">
     <div class="child" data-bind="text: name"></div>
 </div>
 <div class="parent" data-bind="dragula: { data: items2, group: 'test' }">

@@ -19,7 +19,14 @@
       name: 'Item 3'
     }, {
       name: 'Item 4'
-    }])
+    }]),
+    afterMove: function(item, sourceIndex, sourceItems, targetIndex, targetItems) {
+      console.log(item);
+      console.log(sourceIndex);
+      console.log(sourceItems);
+      console.log(targetIndex);
+      console.log(targetItems);
+    }
   };
 
   ko.applyBindings(viewModel);

@@ -3,7 +3,7 @@
 import ko from 'knockout';
 import dragula from 'dragula';
 
-const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove', 'includeDestroyed'];
+const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove'];
 const LIST_KEY = 'ko_dragula_list';
 let groups = {};
 
@@ -17,9 +17,9 @@ ko.bindingHandlers.dragula = {
     ko.bindingHandlers.foreach.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
 
     if (options.group) {
-      createOrUpdateDrakeGroup(element, options.group);
+      createOrUpdateDrakeGroup(element, options.group, options);
     } else {
-      let drake = createDrake(element);
+      let drake = createDrake(element, options);
       ko.utils.domNodeDisposal.addDisposeCallback(element, () => { drake.destroy(); });
     }
 
@@ -51,12 +51,12 @@ function makeForeachOptions(valueAccessor) {
   return templateOptions;
 }
 
-function createOrUpdateDrakeGroup(element, groupName) {
+function createOrUpdateDrakeGroup(element, groupName, options) {
   let drake = groups[groupName];
   if (drake) {
     drake.containers.push(element);
   } else {
-    drake = groups[groupName] = createDrake(element);
+    drake = groups[groupName] = createDrake(element, options);
   }
 
   ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
@@ -70,21 +70,27 @@ function createOrUpdateDrakeGroup(element, groupName) {
   });
 }
 
-function createDrake(element) {
+function createDrake(element, options) {
   let drake = dragula([element]);
-  drake.on('drop', onDrop);
+  drake.on('drop', onDrop.bind(drake, options));
 
   return drake;
 }
 
-function onDrop(el, target, source) {
+function onDrop(options, el, target, source) {
   let item = ko.dataFor(el);
   let sourceItems = ko.utils.domData.get(source, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
   let targetItems = ko.utils.domData.get(target, LIST_KEY);
-  let targetIndex = Array.prototype.indexOf.call(target.children, el);
+  let targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers, otherwise it could be: Array.from(target.children).indexOf(el);
 
-  el.remove();
+  // Remove the element moved by dragula, let Knockout manage the DOM
+  el.parentElement.removeChild(el); // For old browsers, otherwise it could be: el.remove();
+
   sourceItems.splice(sourceIndex, 1);
   targetItems.splice(targetIndex, 0, item);
+
+  if (options.afterMove) {
+    options.afterMove(item, sourceIndex, sourceItems, targetIndex, targetItems);
+  }
 }
