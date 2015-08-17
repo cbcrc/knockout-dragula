@@ -4,7 +4,11 @@
 
 <title>knockout-dragula</title>
 
-<div class="parent" data-bind="dragula: items">
+<div class="parent" data-bind="dragula: { data: items1 }">
+  <div class="child" data-bind="text: name"></div>
+</div>
+
+<div class="parent" data-bind="dragula: items2">
   <div class="child" data-bind="text: name"></div>
 </div>
 

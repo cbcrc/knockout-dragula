@@ -19,41 +19,65 @@
 
   var _dragula2 = _interopRequireDefault(_dragula);
 
-  function makeTemplateOptions(valueAccessor) {
+  var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove', 'includeDestroyed'];
+  var LIST_KEY = 'ko_dragula_list';
+
+  function makeForeachOptions(valueAccessor) {
+    var options = _ko['default'].utils.unwrapObservable(valueAccessor()) || {};
     var templateOptions = {
-      foreach: valueAccessor()
+      data: options.data || valueAccessor()
     };
 
-    return function () {
-      return templateOptions;
-    };
+    FOREACH_OPTIONS_PROPERTIES.forEach(function (option) {
+      if (options.hasOwnProperty(option)) {
+        templateOptions[option] = options[option];
+      }
+    });
+
+    return templateOptions;
+  }
+
+  function onDrop(el, target, source) {
+    var item = _ko['default'].dataFor(el);
+    var sourceItems = _ko['default'].utils.domData.get(source, LIST_KEY);
+    var sourceIndex = sourceItems.indexOf(item);
+    var targetItems = _ko['default'].utils.domData.get(target, LIST_KEY);
+    var targetIndex = Array.prototype.indexOf.call(target.children, el);
+
+    el.remove();
+    sourceItems.splice(sourceIndex, 1);
+    targetItems.splice(targetIndex, 0, item);
   }
 
   _ko['default'].bindingHandlers.dragula = {
-    init: function init(element, valueAccessor, allBindingsAccessor, data, context) {
-      var items = valueAccessor();
+    init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var foreachOptions = makeForeachOptions(valueAccessor);
 
-      _ko['default'].bindingHandlers.template.init(element, makeTemplateOptions(valueAccessor), allBindingsAccessor, data, context);
+      _ko['default'].utils.domData.set(element, LIST_KEY, foreachOptions.data);
+
+      _ko['default'].bindingHandlers.foreach.init(element, function () {
+        return foreachOptions;
+      }, allBindings, viewModel, bindingContext);
 
       var drake = (0, _dragula2['default'])([element]);
-      drake.on('drop', function (el, target /*, source*/) {
-        var item = _ko['default'].dataFor(el);
-        var sourceIndex = items.indexOf(item);
-        var targetIndex = Array.prototype.indexOf.call(target.children, el);
-
-        items.splice(sourceIndex, 1);
-        items.splice(targetIndex, 0, item);
-        el.remove();
-      });
+      drake.on('drop', onDrop);
 
       _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
         drake.destroy();
       });
 
-      return { controlsDescendantBindings: true };
+      return {
+        controlsDescendantBindings: true
+      };
     },
-    update: function update(element, valueAccessor, allBindingsAccessor, data, context) {
-      _ko['default'].bindingHandlers.template.update(element, makeTemplateOptions(valueAccessor), allBindingsAccessor, data, context);
+    update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var foreachOptions = makeForeachOptions(valueAccessor);
+
+      _ko['default'].utils.domData.set(element, LIST_KEY, foreachOptions.data);
+
+      _ko['default'].bindingHandlers.foreach.update(element, function () {
+        return foreachOptions;
+      }, allBindings, viewModel, bindingContext);
     }
   };
 });
