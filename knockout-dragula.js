@@ -8,6 +8,9 @@ const LIST_KEY = 'ko_dragula_list';
 let groups = {};
 
 ko.bindingHandlers.dragula = {
+  invalidTarget: function(el) {
+    return el.tagName === 'BUTTON' || el.tagName === 'A';
+  },
   init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
     let options = ko.utils.unwrapObservable(valueAccessor()) || {};
     let foreachOptions = makeForeachOptions(valueAccessor);
@@ -71,7 +74,9 @@ function createOrUpdateDrakeGroup(element, groupName, options) {
 }
 
 function createDrake(element, options) {
-  let drake = dragula([element]);
+  let drake = dragula([element], {
+    invalid: ko.bindingHandlers.dragula.invalidTarget
+  });
   drake.on('drop', onDrop.bind(drake, options));
 
   return drake;

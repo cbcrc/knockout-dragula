@@ -24,6 +24,9 @@
   var groups = {};
 
   _ko['default'].bindingHandlers.dragula = {
+    invalidTarget: function invalidTarget(el) {
+      return el.tagName === 'BUTTON' || el.tagName === 'A';
+    },
     init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
       var options = _ko['default'].utils.unwrapObservable(valueAccessor()) || {};
       var foreachOptions = makeForeachOptions(valueAccessor);
@@ -61,7 +64,7 @@
   };
 
   function makeForeachOptions(valueAccessor) {
-    var options = _ko['default'].utils.unwrapObservable(valueAccessor()) || {};
+    var options = _ko['default'].unwrap(valueAccessor()) || {};
     var templateOptions = {
       data: options.data || valueAccessor()
     };
@@ -95,7 +98,9 @@
   }
 
   function createDrake(element, options) {
-    var drake = (0, _dragula2['default'])([element]);
+    var drake = (0, _dragula2['default'])([element], {
+      invalid: _ko['default'].bindingHandlers.dragula.invalidTarget
+    });
     drake.on('drop', onDrop.bind(drake, options));
 
     return drake;
