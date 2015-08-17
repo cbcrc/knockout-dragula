@@ -1,0 +1,26 @@
+{
+  "name": "knockout-dragula",
+  "version": "0.1.0",
+  "description": "Drag and drop binding handler for Knockout using Dragula",
+  "scripts": {
+    "build": "babel knockout-dragula.js --out-file dist/knockout-dragula.js --modules umd && uglifyjs -m -c -o dist/knockout-dragula.min.js dist/knockout-dragula.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cbcrc/knockout-dragula.git"
+  },
+  "author": "CBC/Radio-Canada",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cbcrc/knockout-dragula/issues"
+  },
+  "homepage": "https://github.com/cbcrc/knockout-dragula",
+  "dependencies": {
+    "dragula": "3.0.3",
+    "knockout": "3.3.0"
+  },
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "uglify-js": "^2.4.24"
+  }
+}
