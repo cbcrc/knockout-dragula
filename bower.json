@@ -1,7 +1,7 @@
 {
   "name": "knockout-dragula",
   "main": "dist/knockout-dragula.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "authors": [
     "CBC/Radio-Canada"
   ],
