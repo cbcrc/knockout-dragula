@@ -1,0 +1,22 @@
+{
+  "name": "knockout-dragula",
+  "main": "dist/knockout-dragula.js",
+  "version": "0.1.0",
+  "authors": [
+    "CBC/Radio-Canada"
+  ],
+  "description": "Drag and drop binding handler for Knockout using Dragula",
+  "license": "MIT",
+  "homepage": "https://github.com/cbcrc/knockout-dragula",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "knockout": "~3.3.0",
+    "dragula": "~3.0.3"
+  }
+}
