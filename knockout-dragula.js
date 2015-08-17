@@ -37,7 +37,7 @@ ko.bindingHandlers.dragula = {
 };
 
 function makeForeachOptions(valueAccessor) {
-  let options = ko.utils.unwrapObservable(valueAccessor()) || {};
+  let options = ko.unwrap(valueAccessor()) || {};
   let templateOptions = {
     data: options.data || valueAccessor()
   };
