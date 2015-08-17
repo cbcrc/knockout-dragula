@@ -31,6 +31,8 @@ ko.bindingHandlers.dragula = {
     ko.utils.domNodeDisposal.addDisposeCallback(element, function() {
       drake.destroy();
     });
+
+    return { controlsDescendantBindings: true };
   },
   update: function(element, valueAccessor, allBindingsAccessor, data, context) {
     ko.bindingHandlers.template.update(element, makeTemplateOptions(valueAccessor), allBindingsAccessor, data, context);

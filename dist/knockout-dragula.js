@@ -49,6 +49,8 @@
       _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
         drake.destroy();
       });
+
+      return { controlsDescendantBindings: true };
     },
     update: function update(element, valueAccessor, allBindingsAccessor, data, context) {
       _ko['default'].bindingHandlers.template.update(element, makeTemplateOptions(valueAccessor), allBindingsAccessor, data, context);
