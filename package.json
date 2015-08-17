@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Drag and drop binding handler for Knockout using Dragula",
   "scripts": {
-    "build": "babel knockout-dragula.js --out-file dist/knockout-dragula.js --modules umd && uglifyjs -m -c -o dist/knockout-dragula.min.js dist/knockout-dragula.js"
+    "build": "jshint . && babel knockout-dragula.js --out-file dist/knockout-dragula.js --modules umd && uglifyjs -m -c -o dist/knockout-dragula.min.js dist/knockout-dragula.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "babel": "^5.8.21",
+    "jshint": "^2.8.0",
     "uglify-js": "^2.4.24"
   }
 }

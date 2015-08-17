@@ -1,5 +1,7 @@
-import ko from "knockout";
-import dragula from "dragula";
+'use strict';
+
+import ko from 'knockout';
+import dragula from 'dragula';
 
 ko.bindingHandlers.dragula = {
   init: function(element, valueAccessor, allBindingsAccessor, data, context) {
@@ -13,7 +15,7 @@ ko.bindingHandlers.dragula = {
     }, allBindingsAccessor, data, context);
 
     let drake = dragula([element]);
-    drake.on('drop', function(el, target, source) {
+    drake.on('drop', function(el, target/*, source*/) {
       let item = ko.dataFor(el);
       let sourceIndex = items.indexOf(item);
       let targetIndex = Array.from(target.children).indexOf(el);
