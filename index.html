@@ -1,15 +1,13 @@
 <!doctype html>
 <link href="node_modules/dragula/dist/dragula.min.css" rel="stylesheet" type="text/css">
 <link href="example/example.css" rel="stylesheet" type="text/css">
-
 <title>knockout-dragula</title>
 
-<div id="parent1" class="parent" data-bind="dragula: { data: items1 }">
-  <div class="child" data-bind="text: name"></div>
+<div class="parent" data-bind="dragula: { data: items1, group: 'test' }">
+    <div class="child" data-bind="text: name"></div>
 </div>
-
-<div id="parent2" class="parent" data-bind="dragula: { data: items2, linkTo: document.getElementById('parent1') }">
-  <div class="child" data-bind="text: name"></div>
+<div class="parent" data-bind="dragula: { data: items2, group: 'test' }">
+    <div class="child" data-bind="text: name"></div>
 </div>
 
 <script src="node_modules/dragula/dist/dragula.min.js"></script>

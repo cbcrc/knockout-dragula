@@ -5,7 +5,36 @@ import dragula from 'dragula';
 
 const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove', 'includeDestroyed'];
 const LIST_KEY = 'ko_dragula_list';
-const DRAKE_KEY = 'ko_dragula_drake';
+let groups = {};
+
+ko.bindingHandlers.dragula = {
+  init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+    let options = ko.utils.unwrapObservable(valueAccessor()) || {};
+    let foreachOptions = makeForeachOptions(valueAccessor);
+
+    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
+
+    ko.bindingHandlers.foreach.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
+
+    if (options.group) {
+      createOrUpdateDrakeGroup(element, options.group);
+    } else {
+      let drake = createDrake(element);
+      ko.utils.domNodeDisposal.addDisposeCallback(element, () => { drake.destroy(); });
+    }
+
+    return {
+      controlsDescendantBindings: true
+    };
+  },
+  update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+    let foreachOptions = makeForeachOptions(valueAccessor);
+
+    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
+
+    ko.bindingHandlers.foreach.update(element, () => foreachOptions, allBindings, viewModel, bindingContext);
+  }
+};
 
 function makeForeachOptions(valueAccessor) {
   let options = ko.utils.unwrapObservable(valueAccessor()) || {};
@@ -22,12 +51,30 @@ function makeForeachOptions(valueAccessor) {
   return templateOptions;
 }
 
-function initDragula(element) {
+function createOrUpdateDrakeGroup(element, groupName) {
+  let drake = groups[groupName];
+  if (drake) {
+    drake.containers.push(element);
+  } else {
+    drake = groups[groupName] = createDrake(element);
+  }
+
+  ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
+    let index = drake.containers.indexOf(element);
+    drake.containers.splice(index, 1);
+
+    if (!drake.containers.length) {
+      drake.destroy();
+      groups[groupName] = null;
+    }
+  });
+}
+
+function createDrake(element) {
   let drake = dragula([element]);
   drake.on('drop', onDrop);
-  ko.utils.domData.set(element, DRAKE_KEY, drake);
 
-  ko.utils.domNodeDisposal.addDisposeCallback(element, () => { drake.destroy(); });
+  return drake;
 }
 
 function onDrop(el, target, source) {
@@ -41,45 +88,3 @@ function onDrop(el, target, source) {
   sourceItems.splice(sourceIndex, 1);
   targetItems.splice(targetIndex, 0, item);
 }
-
-function linkContainers(originalContainer, newContainer) {
-  let drake = ko.utils.domData.get(originalContainer, DRAKE_KEY);
-  if (!drake) {
-    return;
-  }
-
-  drake.containers.push(newContainer);
-
-  ko.utils.domNodeDisposal.addDisposeCallback(newContainer, () => {
-    let index = drake.containers.indexOf(newContainer);
-    drake.containers.splice(index, 1);
-  });
-}
-
-ko.bindingHandlers.dragula = {
-  init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-    let options = ko.utils.unwrapObservable(valueAccessor()) || {};
-    let foreachOptions = makeForeachOptions(valueAccessor);
-
-    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-    ko.bindingHandlers.foreach.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
-
-    if (options.linkTo) {
-      linkContainers(options.linkTo, element);
-    } else {
-      initDragula(element);
-    }
-
-    return {
-      controlsDescendantBindings: true
-    };
-  },
-  update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-    let foreachOptions = makeForeachOptions(valueAccessor);
-
-    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-    ko.bindingHandlers.foreach.update(element, () => foreachOptions, allBindings, viewModel, bindingContext);
-  }
-};
