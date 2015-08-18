@@ -11,7 +11,7 @@
   "trailing": true,
   "boss": true,
   "eqnull": true,
-  "strict": true,
+  "strict": false,
   "immed": true,
   "expr": true,
   "latedef": "nofunc",

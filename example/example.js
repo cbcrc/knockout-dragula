@@ -20,7 +20,7 @@
     }, {
       name: 'Item 4'
     }]),
-    afterMove: function() {
+    afterDrop: function() {
       console.log(arguments);
     }
   };

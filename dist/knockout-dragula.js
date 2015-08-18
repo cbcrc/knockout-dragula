@@ -1,16 +1,16 @@
 (function (global, factory) {
   if (typeof define === 'function' && define.amd) {
-    define(['exports', 'knockout', 'dragula'], factory);
-  } else if (typeof exports !== 'undefined') {
-    factory(exports, require('knockout'), require('dragula'));
+    define(['exports', 'module', 'knockout', 'dragula'], factory);
+  } else if (typeof exports !== 'undefined' && typeof module !== 'undefined') {
+    factory(exports, module, require('knockout'), require('dragula'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.ko, global.dragula);
+    factory(mod.exports, mod, global.ko, global.dragula);
     global.knockoutDragula = mod.exports;
   }
-})(this, function (exports, _knockout, _dragula) {
+})(this, function (exports, module, _knockout, _dragula) {
   'use strict';
 
   function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -19,112 +19,41 @@
 
   var _dragula2 = _interopRequireDefault(_dragula);
 
-  var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove'];
+  var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
   var LIST_KEY = 'ko_dragula_list';
+  var AFTER_DROP_KEY = 'ko_dragula_afterDrop';
+
+  // Knockout shortcuts
+  var unwrap = _ko['default'].unwrap;
+  var setData = _ko['default'].utils.domData.set;
+  var getData = _ko['default'].utils.domData.get;
+  var foreachBinding = _ko['default'].bindingHandlers.foreach;
+  var addDisposeCallback = _ko['default'].utils.domNodeDisposal.addDisposeCallback;
+
   var groups = [];
-
-  _ko['default'].bindingHandlers.dragula = {
-    invalidTarget: function invalidTarget(el) {
-      return el.tagName === 'BUTTON' || el.tagName === 'A';
-    },
-    init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
-      var options = _ko['default'].utils.unwrapObservable(valueAccessor()) || {};
-      var foreachOptions = makeForeachOptions(valueAccessor);
-
-      _ko['default'].utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-      _ko['default'].bindingHandlers.foreach.init(element, function () {
-        return foreachOptions;
-      }, allBindings, viewModel, bindingContext);
-
-      if (options.group) {
-        createOrUpdateDrakeGroup(element, options.group, options);
-      } else {
-        (function () {
-          var drake = createDrake(element, options);
-          _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
-            return drake.destroy();
-          });
-        })();
-      }
-
-      return {
-        controlsDescendantBindings: true
-      };
-    },
-    update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {
-      var foreachOptions = makeForeachOptions(valueAccessor);
-
-      _ko['default'].utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-      _ko['default'].bindingHandlers.foreach.update(element, function () {
-        return foreachOptions;
-      }, allBindings, viewModel, bindingContext);
-    }
-  };
-
-  function makeForeachOptions(valueAccessor) {
-    var options = _ko['default'].unwrap(valueAccessor()) || {};
-    var templateOptions = {
-      data: options.data || valueAccessor()
-    };
-
-    FOREACH_OPTIONS_PROPERTIES.forEach(function (option) {
-      if (options.hasOwnProperty(option)) {
-        templateOptions[option] = options[option];
-      }
-    });
-
-    return templateOptions;
-  }
-
-  function createOrUpdateDrakeGroup(element, groupName, options) {
-    var group = findGroup(groupName);
-    if (group) {
-      group.drake.containers.push(element);
-    } else {
-      group = addGroup(groupName, createDrake(element, options));
-    }
-
-    _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
-      return removeContainer(group, element);
-    });
-  }
+  var defaultOptions = {};
 
   function findGroup(name) {
     // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = groups[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var group = _step.value;
-
-        if (group.name === name) {
-          return group;
-        }
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator['return']) {
-          _iterator['return']();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
+    for (var i = 0; i < groups.length; i++) {
+      if (groups[i].name === name) {
+        return groups[i];
       }
     }
   }
 
   function addGroup(name, drake) {
-    var group = { name: name, drake: drake };
+    var group = {
+      name: name, drake: drake
+    };
     groups.push(group);
     return group;
+  }
+
+  function addGroupWithOptions(name, options) {
+    var drake = (0, _dragula2['default'])(options);
+    drake.on('drop', onDrop);
+    return addGroup(name, drake);
   }
 
   function removeContainer(group, container) {
@@ -142,20 +71,17 @@
     group.drake.destroy();
   }
 
-  function createDrake(element, options) {
-    var drake = (0, _dragula2['default'])([element], {
-      invalid: _ko['default'].bindingHandlers.dragula.invalidTarget
-    });
-    drake.on('drop', onDrop.bind(drake, options));
-
+  function createDrake(element) {
+    var drake = (0, _dragula2['default'])([element], defaultOptions);
+    drake.on('drop', onDrop);
     return drake;
   }
 
-  function onDrop(options, el, target, source) {
+  function onDrop(el, target, source) {
     var item = _ko['default'].dataFor(el);
-    var sourceItems = _ko['default'].utils.domData.get(source, LIST_KEY);
+    var sourceItems = getData(source, LIST_KEY);
     var sourceIndex = sourceItems.indexOf(item);
-    var targetItems = _ko['default'].utils.domData.get(target, LIST_KEY);
+    var targetItems = getData(target, LIST_KEY);
     var targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
     // Remove the element moved by dragula, let Knockout manage the DOM
@@ -164,8 +90,88 @@
     sourceItems.splice(sourceIndex, 1);
     targetItems.splice(targetIndex, 0, item);
 
-    if (options.afterMove) {
-      options.afterMove(item, sourceIndex, sourceItems, targetIndex, targetItems);
+    var afterDrop = getData(target, AFTER_DROP_KEY);
+    if (afterDrop) {
+      afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
     }
   }
+
+  _ko['default'].bindingHandlers.dragula = {
+    init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var options = unwrap(valueAccessor()) || {};
+      var foreachOptions = makeForeachOptions(valueAccessor, options);
+
+      setData(element, LIST_KEY, foreachOptions.data);
+      if (options.afterDrop) {
+        setData(element, AFTER_DROP_KEY, options.afterDrop);
+      }
+
+      foreachBinding.init(element, function () {
+        return foreachOptions;
+      }, allBindings, viewModel, bindingContext);
+
+      if (options.group) {
+        createOrUpdateDrakeGroup(options.group, element);
+      } else {
+        (function () {
+          var drake = createDrake(element);
+          addDisposeCallback(element, function () {
+            return drake.destroy();
+          });
+        })();
+      }
+
+      return {
+        controlsDescendantBindings: true
+      };
+    },
+    update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {
+      var options = unwrap(valueAccessor()) || {};
+      var foreachOptions = makeForeachOptions(valueAccessor, options);
+
+      setData(element, LIST_KEY, foreachOptions.data);
+      if (options.afterDrop) {
+        setData(element, AFTER_DROP_KEY, options.afterDrop);
+      }
+
+      foreachBinding.update(element, function () {
+        return foreachOptions;
+      }, allBindings, viewModel, bindingContext);
+    }
+  };
+
+  function makeForeachOptions(valueAccessor, options) {
+    var templateOptions = {
+      data: options.data || valueAccessor()
+    };
+
+    FOREACH_OPTIONS_PROPERTIES.forEach(function (option) {
+      if (options.hasOwnProperty(option)) {
+        templateOptions[option] = options[option];
+      }
+    });
+
+    return templateOptions;
+  }
+
+  function createOrUpdateDrakeGroup(groupName, container) {
+    var group = findGroup(groupName);
+    if (group) {
+      group.drake.containers.push(container);
+    } else {
+      group = addGroup(groupName, createDrake(container));
+    }
+
+    addDisposeCallback(container, function () {
+      return removeContainer(group, container);
+    });
+  }
+
+  module.exports = {
+    defaultOptions: defaultOptions,
+    add: addGroup,
+    options: addGroupWithOptions,
+    find: findGroup,
+    destroy: destroyGroup
+  };
 });

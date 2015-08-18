@@ -1,83 +1,41 @@
-'use strict';
-
 import ko from 'knockout';
 import dragula from 'dragula';
 
-const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove'];
+const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
 const LIST_KEY = 'ko_dragula_list';
+const AFTER_DROP_KEY = 'ko_dragula_afterDrop';
+
+// Knockout shortcuts
+let unwrap = ko.unwrap;
+let setData = ko.utils.domData.set;
+let getData = ko.utils.domData.get;
+let foreachBinding = ko.bindingHandlers.foreach;
+let addDisposeCallback = ko.utils.domNodeDisposal.addDisposeCallback;
+
 let groups = [];
-
-ko.bindingHandlers.dragula = {
-  invalidTarget: function(el) {
-    return el.tagName === 'BUTTON' || el.tagName === 'A';
-  },
-  init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-    let options = ko.utils.unwrapObservable(valueAccessor()) || {};
-    let foreachOptions = makeForeachOptions(valueAccessor);
-
-    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-    ko.bindingHandlers.foreach.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
-
-    if (options.group) {
-      createOrUpdateDrakeGroup(element, options.group, options);
-    } else {
-      let drake = createDrake(element, options);
-      ko.utils.domNodeDisposal.addDisposeCallback(element, () => drake.destroy());
-    }
-
-    return {
-      controlsDescendantBindings: true
-    };
-  },
-  update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
-    let foreachOptions = makeForeachOptions(valueAccessor);
-
-    ko.utils.domData.set(element, LIST_KEY, foreachOptions.data);
-
-    ko.bindingHandlers.foreach.update(element, () => foreachOptions, allBindings, viewModel, bindingContext);
-  }
-};
-
-function makeForeachOptions(valueAccessor) {
-  let options = ko.unwrap(valueAccessor()) || {};
-  let templateOptions = {
-    data: options.data || valueAccessor()
-  };
-
-  FOREACH_OPTIONS_PROPERTIES.forEach(function(option) {
-    if (options.hasOwnProperty(option)) {
-      templateOptions[option] = options[option];
-    }
-  });
-
-  return templateOptions;
-}
-
-function createOrUpdateDrakeGroup(element, groupName, options) {
-  let group = findGroup(groupName);
-  if (group) {
-    group.drake.containers.push(element);
-  } else {
-    group = addGroup(groupName, createDrake(element, options));
-  }
-
-  ko.utils.domNodeDisposal.addDisposeCallback(element, () => removeContainer(group, element));
-}
+let defaultOptions = {};
 
 function findGroup(name) {
   // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
-  for (let group of groups) {
-    if (group.name === name) {
-      return group;
+  for (let i = 0; i < groups.length; i++) {
+    if (groups[i].name === name) {
+      return groups[i];
     }
   }
 }
 
 function addGroup(name, drake) {
-  let group = { name, drake };
+  let group = {
+    name, drake
+  };
   groups.push(group);
   return group;
+}
+
+function addGroupWithOptions(name, options) {
+  let drake = dragula(options);
+  drake.on('drop', onDrop);
+  return addGroup(name, drake);
 }
 
 function removeContainer(group, container) {
@@ -95,20 +53,17 @@ function destroyGroup(group) {
   group.drake.destroy();
 }
 
-function createDrake(element, options) {
-  let drake = dragula([element], {
-    invalid: ko.bindingHandlers.dragula.invalidTarget
-  });
-  drake.on('drop', onDrop.bind(drake, options));
-
+function createDrake(element) {
+  let drake = dragula([element], defaultOptions);
+  drake.on('drop', onDrop);
   return drake;
 }
 
-function onDrop(options, el, target, source) {
+function onDrop(el, target, source) {
   let item = ko.dataFor(el);
-  let sourceItems = ko.utils.domData.get(source, LIST_KEY);
+  let sourceItems = getData(source, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
-  let targetItems = ko.utils.domData.get(target, LIST_KEY);
+  let targetItems = getData(target, LIST_KEY);
   let targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
   // Remove the element moved by dragula, let Knockout manage the DOM
@@ -117,7 +72,77 @@ function onDrop(options, el, target, source) {
   sourceItems.splice(sourceIndex, 1);
   targetItems.splice(targetIndex, 0, item);
 
-  if (options.afterMove) {
-    options.afterMove(item, sourceIndex, sourceItems, targetIndex, targetItems);
+  let afterDrop = getData(target, AFTER_DROP_KEY);
+  if (afterDrop) {
+    afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
   }
 }
+
+ko.bindingHandlers.dragula = {
+  init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+    let options = unwrap(valueAccessor()) || {};
+    let foreachOptions = makeForeachOptions(valueAccessor, options);
+
+    setData(element, LIST_KEY, foreachOptions.data);
+    if (options.afterDrop) {
+      setData(element, AFTER_DROP_KEY, options.afterDrop);
+    }
+
+    foreachBinding.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
+
+    if (options.group) {
+      createOrUpdateDrakeGroup(options.group, element);
+    } else {
+      let drake = createDrake(element);
+      addDisposeCallback(element, () => drake.destroy());
+    }
+
+    return {
+      controlsDescendantBindings: true
+    };
+  },
+  update: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
+    let options = unwrap(valueAccessor()) || {};
+    let foreachOptions = makeForeachOptions(valueAccessor, options);
+
+    setData(element, LIST_KEY, foreachOptions.data);
+    if (options.afterDrop) {
+      setData(element, AFTER_DROP_KEY, options.afterDrop);
+    }
+
+    foreachBinding.update(element, () => foreachOptions, allBindings, viewModel, bindingContext);
+  }
+};
+
+function makeForeachOptions(valueAccessor, options) {
+  let templateOptions = {
+    data: options.data || valueAccessor()
+  };
+
+  FOREACH_OPTIONS_PROPERTIES.forEach(function(option) {
+    if (options.hasOwnProperty(option)) {
+      templateOptions[option] = options[option];
+    }
+  });
+
+  return templateOptions;
+}
+
+function createOrUpdateDrakeGroup(groupName, container) {
+  let group = findGroup(groupName);
+  if (group) {
+    group.drake.containers.push(container);
+  } else {
+    group = addGroup(groupName, createDrake(container));
+  }
+
+  addDisposeCallback(container, () => removeContainer(group, container));
+}
+
+export default {
+  defaultOptions: defaultOptions,
+  add: addGroup,
+  options: addGroupWithOptions,
+  find: findGroup,
+  destroy: destroyGroup
+};
