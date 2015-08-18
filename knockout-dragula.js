@@ -13,7 +13,6 @@ let foreachBinding = ko.bindingHandlers.foreach;
 let addDisposeCallback = ko.utils.domNodeDisposal.addDisposeCallback;
 
 let groups = [];
-let defaultOptions = {};
 
 function findGroup(name) {
   // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
@@ -54,7 +53,7 @@ function destroyGroup(group) {
 }
 
 function createDrake(element) {
-  let drake = dragula([element], defaultOptions);
+  let drake = dragula([element]);
   drake.on('drop', onDrop);
   return drake;
 }
@@ -140,7 +139,6 @@ function createOrUpdateDrakeGroup(groupName, container) {
 }
 
 export default {
-  defaultOptions: defaultOptions,
   add: addGroup,
   options: addGroupWithOptions,
   find: findGroup,

@@ -31,7 +31,6 @@
   var addDisposeCallback = _ko['default'].utils.domNodeDisposal.addDisposeCallback;
 
   var groups = [];
-  var defaultOptions = {};
 
   function findGroup(name) {
     // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
@@ -72,7 +71,7 @@
   }
 
   function createDrake(element) {
-    var drake = (0, _dragula2['default'])([element], defaultOptions);
+    var drake = (0, _dragula2['default'])([element]);
     drake.on('drop', onDrop);
     return drake;
   }
@@ -168,7 +167,6 @@
   }
 
   module.exports = {
-    defaultOptions: defaultOptions,
     add: addGroup,
     options: addGroupWithOptions,
     find: findGroup,
