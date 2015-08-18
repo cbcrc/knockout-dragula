@@ -22,6 +22,7 @@
   var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
   var LIST_KEY = 'ko_dragula_list';
   var AFTER_DROP_KEY = 'ko_dragula_afterDrop';
+  var AFTER_DELETE_KEY = 'ko_dragula_afterDelete';
 
   // Knockout shortcuts
   var unwrap = _ko['default'].unwrap;
@@ -51,8 +52,13 @@
 
   function addGroupWithOptions(name, options) {
     var drake = (0, _dragula2['default'])(options);
-    drake.on('drop', onDrop);
+    registerEvents(drake);
     return addGroup(name, drake);
+  }
+
+  function registerEvents(drake) {
+    drake.on('drop', onDrop);
+    drake.on('remove', onRemove);
   }
 
   function removeContainer(group, container) {
@@ -72,7 +78,7 @@
 
   function createDrake(element) {
     var drake = (0, _dragula2['default'])([element]);
-    drake.on('drop', onDrop);
+    registerEvents(drake);
     return drake;
   }
 
@@ -84,7 +90,7 @@
     var targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
     // Remove the element moved by dragula, let Knockout manage the DOM
-    el.parentElement.removeChild(el); // For old browsers (without the need for a polyfill), otherwise it could be: el.remove();
+    target.removeChild(el);
 
     sourceItems.splice(sourceIndex, 1);
     targetItems.splice(targetIndex, 0, item);
@@ -95,15 +101,27 @@
     }
   }
 
+  function onRemove(el, container) {
+    var item = _ko['default'].dataFor(el);
+    var sourceItems = getData(container, LIST_KEY);
+    var sourceIndex = sourceItems.indexOf(item);
+
+    sourceItems.splice(sourceIndex, 1);
+
+    var afterDelete = getData(container, AFTER_DELETE_KEY);
+    if (afterDelete) {
+      afterDelete(item, sourceIndex, sourceItems);
+    }
+  }
+
   _ko['default'].bindingHandlers.dragula = {
     init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
       var options = unwrap(valueAccessor()) || {};
       var foreachOptions = makeForeachOptions(valueAccessor, options);
 
       setData(element, LIST_KEY, foreachOptions.data);
-      if (options.afterDrop) {
-        setData(element, AFTER_DROP_KEY, options.afterDrop);
-      }
+      setData(element, AFTER_DROP_KEY, options.afterDrop);
+      setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
       foreachBinding.init(element, function () {
         return foreachOptions;
@@ -129,9 +147,8 @@
       var foreachOptions = makeForeachOptions(valueAccessor, options);
 
       setData(element, LIST_KEY, foreachOptions.data);
-      if (options.afterDrop) {
-        setData(element, AFTER_DROP_KEY, options.afterDrop);
-      }
+      setData(element, AFTER_DROP_KEY, options.afterDrop);
+      setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
       foreachBinding.update(element, function () {
         return foreachOptions;

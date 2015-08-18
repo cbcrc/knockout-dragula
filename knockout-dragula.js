@@ -4,6 +4,7 @@ import dragula from 'dragula';
 const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
 const LIST_KEY = 'ko_dragula_list';
 const AFTER_DROP_KEY = 'ko_dragula_afterDrop';
+const AFTER_DELETE_KEY = 'ko_dragula_afterDelete';
 
 // Knockout shortcuts
 let unwrap = ko.unwrap;
@@ -33,8 +34,13 @@ function addGroup(name, drake) {
 
 function addGroupWithOptions(name, options) {
   let drake = dragula(options);
-  drake.on('drop', onDrop);
+  registerEvents(drake);
   return addGroup(name, drake);
+}
+
+function registerEvents(drake) {
+  drake.on('drop', onDrop);
+  drake.on('remove', onRemove);
 }
 
 function removeContainer(group, container) {
@@ -54,7 +60,7 @@ function destroyGroup(group) {
 
 function createDrake(element) {
   let drake = dragula([element]);
-  drake.on('drop', onDrop);
+  registerEvents(drake);
   return drake;
 }
 
@@ -66,7 +72,7 @@ function onDrop(el, target, source) {
   let targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
   // Remove the element moved by dragula, let Knockout manage the DOM
-  el.parentElement.removeChild(el); // For old browsers (without the need for a polyfill), otherwise it could be: el.remove();
+  target.removeChild(el);
 
   sourceItems.splice(sourceIndex, 1);
   targetItems.splice(targetIndex, 0, item);
@@ -77,15 +83,27 @@ function onDrop(el, target, source) {
   }
 }
 
+function onRemove(el, container) {
+  let item = ko.dataFor(el);
+  let sourceItems = getData(container, LIST_KEY);
+  let sourceIndex = sourceItems.indexOf(item);
+
+  sourceItems.splice(sourceIndex, 1);
+
+  let afterDelete = getData(container, AFTER_DELETE_KEY);
+  if (afterDelete) {
+    afterDelete(item, sourceIndex, sourceItems);
+  }
+}
+
 ko.bindingHandlers.dragula = {
   init: function(element, valueAccessor, allBindings, viewModel, bindingContext) {
     let options = unwrap(valueAccessor()) || {};
     let foreachOptions = makeForeachOptions(valueAccessor, options);
 
     setData(element, LIST_KEY, foreachOptions.data);
-    if (options.afterDrop) {
-      setData(element, AFTER_DROP_KEY, options.afterDrop);
-    }
+    setData(element, AFTER_DROP_KEY, options.afterDrop);
+    setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
     foreachBinding.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
 
@@ -105,9 +123,8 @@ ko.bindingHandlers.dragula = {
     let foreachOptions = makeForeachOptions(valueAccessor, options);
 
     setData(element, LIST_KEY, foreachOptions.data);
-    if (options.afterDrop) {
-      setData(element, AFTER_DROP_KEY, options.afterDrop);
-    }
+    setData(element, AFTER_DROP_KEY, options.afterDrop);
+    setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
     foreachBinding.update(element, () => foreachOptions, allBindings, viewModel, bindingContext);
   }

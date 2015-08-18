@@ -22,8 +22,13 @@
     }]),
     afterDrop: function() {
       console.log(arguments);
+    },
+    afterDelete: function() {
+      console.log(arguments);
     }
   };
+
+  window.knockoutDragula.options('test', { removeOnSpill: true });
 
   ko.applyBindings(viewModel);
 })(window.ko);
