@@ -11,14 +11,14 @@ bower install knockout-dragula --save
 
 ## Usage
 The `dragula` binding replaces `foreach`:
-```
+```html
 <div data-bind="dragula: items">
     <div data-bind="text: name"></div>
 </div>
 ```
 
 You can also link multiple containers together by giving them a group name using the `group` option:
-```
+```html
 <div data-bind="dragula: { data: items1, group: 'test' }">
     <div data-bind="text: name"></div>
 </div>
@@ -30,7 +30,7 @@ You can also link multiple containers together by giving them a group name using
 ## Additional options
 ### `afterDrop`
 Callback function that is called when an item is dropped into the container. It will not be called if it is dropped into another container of the group, that container needs to specify its own `afterDrop` callback.
-```
+```html
 <div data-bind="dragula: { data: items, afterDrop: afterDrop }">
     <div data-bind="text: name"></div>
 </div>
