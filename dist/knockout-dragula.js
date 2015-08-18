@@ -21,7 +21,7 @@
 
   var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove'];
   var LIST_KEY = 'ko_dragula_list';
-  var groups = {};
+  var groups = [];
 
   _ko['default'].bindingHandlers.dragula = {
     invalidTarget: function invalidTarget(el) {
@@ -43,7 +43,7 @@
         (function () {
           var drake = createDrake(element, options);
           _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
-            drake.destroy();
+            return drake.destroy();
           });
         })();
       }
@@ -79,22 +79,67 @@
   }
 
   function createOrUpdateDrakeGroup(element, groupName, options) {
-    var drake = groups[groupName];
-    if (drake) {
-      drake.containers.push(element);
+    var group = findGroup(groupName);
+    if (group) {
+      group.drake.containers.push(element);
     } else {
-      drake = groups[groupName] = createDrake(element, options);
+      group = addGroup(groupName, createDrake(element, options));
     }
 
     _ko['default'].utils.domNodeDisposal.addDisposeCallback(element, function () {
-      var index = drake.containers.indexOf(element);
-      drake.containers.splice(index, 1);
-
-      if (!drake.containers.length) {
-        drake.destroy();
-        groups[groupName] = null;
-      }
+      return removeContainer(group, element);
     });
+  }
+
+  function findGroup(name) {
+    // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = groups[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var group = _step.value;
+
+        if (group.name === name) {
+          return group;
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator['return']) {
+          _iterator['return']();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+  }
+
+  function addGroup(name, drake) {
+    var group = { name: name, drake: drake };
+    groups.push(group);
+    return group;
+  }
+
+  function removeContainer(group, container) {
+    var index = group.drake.containers.indexOf(container);
+    group.drake.containers.splice(index, 1);
+
+    if (!group.drake.containers.length) {
+      destroyGroup(group);
+    }
+  }
+
+  function destroyGroup(group) {
+    var index = groups.indexOf(group);
+    groups.splice(index, 1);
+    group.drake.destroy();
   }
 
   function createDrake(element, options) {
@@ -111,10 +156,10 @@
     var sourceItems = _ko['default'].utils.domData.get(source, LIST_KEY);
     var sourceIndex = sourceItems.indexOf(item);
     var targetItems = _ko['default'].utils.domData.get(target, LIST_KEY);
-    var targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers, otherwise it could be: Array.from(target.children).indexOf(el);
+    var targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
     // Remove the element moved by dragula, let Knockout manage the DOM
-    el.parentElement.removeChild(el); // For old browsers, otherwise it could be: el.remove();
+    el.parentElement.removeChild(el); // For old browsers (without the need for a polyfill), otherwise it could be: el.remove();
 
     sourceItems.splice(sourceIndex, 1);
     targetItems.splice(targetIndex, 0, item);

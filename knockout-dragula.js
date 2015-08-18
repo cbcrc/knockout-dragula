@@ -5,7 +5,7 @@ import dragula from 'dragula';
 
 const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterRender', 'as', 'beforeRemove'];
 const LIST_KEY = 'ko_dragula_list';
-let groups = {};
+let groups = [];
 
 ko.bindingHandlers.dragula = {
   invalidTarget: function(el) {
@@ -23,7 +23,7 @@ ko.bindingHandlers.dragula = {
       createOrUpdateDrakeGroup(element, options.group, options);
     } else {
       let drake = createDrake(element, options);
-      ko.utils.domNodeDisposal.addDisposeCallback(element, () => { drake.destroy(); });
+      ko.utils.domNodeDisposal.addDisposeCallback(element, () => drake.destroy());
     }
 
     return {
@@ -55,22 +55,44 @@ function makeForeachOptions(valueAccessor) {
 }
 
 function createOrUpdateDrakeGroup(element, groupName, options) {
-  let drake = groups[groupName];
-  if (drake) {
-    drake.containers.push(element);
+  let group = findGroup(groupName);
+  if (group) {
+    group.drake.containers.push(element);
   } else {
-    drake = groups[groupName] = createDrake(element, options);
+    group = addGroup(groupName, createDrake(element, options));
   }
 
-  ko.utils.domNodeDisposal.addDisposeCallback(element, () => {
-    let index = drake.containers.indexOf(element);
-    drake.containers.splice(index, 1);
+  ko.utils.domNodeDisposal.addDisposeCallback(element, () => removeContainer(group, element));
+}
 
-    if (!drake.containers.length) {
-      drake.destroy();
-      groups[groupName] = null;
+function findGroup(name) {
+  // For old browsers (without the need for a polyfill), otherwise it could be: return groups.find(group => group.name === name);
+  for (let group of groups) {
+    if (group.name === name) {
+      return group;
     }
-  });
+  }
+}
+
+function addGroup(name, drake) {
+  let group = { name, drake };
+  groups.push(group);
+  return group;
+}
+
+function removeContainer(group, container) {
+  let index = group.drake.containers.indexOf(container);
+  group.drake.containers.splice(index, 1);
+
+  if (!group.drake.containers.length) {
+    destroyGroup(group);
+  }
+}
+
+function destroyGroup(group) {
+  let index = groups.indexOf(group);
+  groups.splice(index, 1);
+  group.drake.destroy();
 }
 
 function createDrake(element, options) {
@@ -87,10 +109,10 @@ function onDrop(options, el, target, source) {
   let sourceItems = ko.utils.domData.get(source, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
   let targetItems = ko.utils.domData.get(target, LIST_KEY);
-  let targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers, otherwise it could be: Array.from(target.children).indexOf(el);
+  let targetIndex = Array.prototype.indexOf.call(target.children, el); // For old browsers (without the need for a polyfill), otherwise it could be: Array.from(target.children).indexOf(el);
 
   // Remove the element moved by dragula, let Knockout manage the DOM
-  el.parentElement.removeChild(el); // For old browsers, otherwise it could be: el.remove();
+  el.parentElement.removeChild(el); // For old browsers (without the need for a polyfill), otherwise it could be: el.remove();
 
   sourceItems.splice(sourceIndex, 1);
   targetItems.splice(targetIndex, 0, item);

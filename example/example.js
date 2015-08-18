@@ -20,12 +20,8 @@
     }, {
       name: 'Item 4'
     }]),
-    afterMove: function(item, sourceIndex, sourceItems, targetIndex, targetItems) {
-      console.log(item);
-      console.log(sourceIndex);
-      console.log(sourceItems);
-      console.log(targetIndex);
-      console.log(targetItems);
+    afterMove: function() {
+      console.log(arguments);
     }
   };
 
