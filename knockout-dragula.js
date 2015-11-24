@@ -58,8 +58,8 @@ function destroyGroup(group) {
   group.drake.destroy();
 }
 
-function createDrake(element) {
-  let drake = dragula([element]);
+function createDrake(element, options) {
+  let drake = dragula([element], options);
   registerEvents(drake);
   return drake;
 }
@@ -108,9 +108,9 @@ ko.bindingHandlers.dragula = {
     foreachBinding.init(element, () => foreachOptions, allBindings, viewModel, bindingContext);
 
     if (options.group) {
-      createOrUpdateDrakeGroup(options.group, element);
+      createOrUpdateDrakeGroup(element, options);
     } else {
-      let drake = createDrake(element);
+      let drake = createDrake(element, options);
       addDisposeCallback(element, () => drake.destroy());
     }
 
@@ -144,12 +144,12 @@ function makeForeachOptions(valueAccessor, options) {
   return templateOptions;
 }
 
-function createOrUpdateDrakeGroup(groupName, container) {
-  let group = findGroup(groupName);
+function createOrUpdateDrakeGroup(container, options) {
+  let group = findGroup(options.group);
   if (group) {
     group.drake.containers.push(container);
   } else {
-    group = addGroup(groupName, createDrake(container));
+    group = addGroup(options.group, createDrake(container, options));
   }
 
   addDisposeCallback(container, () => removeContainer(group, container));

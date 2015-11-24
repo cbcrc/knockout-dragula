@@ -76,8 +76,8 @@
     group.drake.destroy();
   }
 
-  function createDrake(element) {
-    var drake = (0, _dragula2['default'])([element]);
+  function createDrake(element, options) {
+    var drake = (0, _dragula2['default'])([element], options);
     registerEvents(drake);
     return drake;
   }
@@ -128,10 +128,10 @@
       }, allBindings, viewModel, bindingContext);
 
       if (options.group) {
-        createOrUpdateDrakeGroup(options.group, element);
+        createOrUpdateDrakeGroup(element, options);
       } else {
         (function () {
-          var drake = createDrake(element);
+          var drake = createDrake(element, options);
           addDisposeCallback(element, function () {
             return drake.destroy();
           });
@@ -170,12 +170,12 @@
     return templateOptions;
   }
 
-  function createOrUpdateDrakeGroup(groupName, container) {
-    var group = findGroup(groupName);
+  function createOrUpdateDrakeGroup(container, options) {
+    var group = findGroup(options.group);
     if (group) {
       group.drake.containers.push(container);
     } else {
-      group = addGroup(groupName, createDrake(container));
+      group = addGroup(options.group, createDrake(container, options));
     }
 
     addDisposeCallback(container, function () {
