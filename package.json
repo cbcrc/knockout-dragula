@@ -1,6 +1,6 @@
 {
   "name": "knockout-dragula",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Drag and drop binding handler for Knockout using Dragula",
   "scripts": {
     "build": "jshint . && babel knockout-dragula.js -o dist/knockout-dragula.js --modules umd && uglifyjs -m -c -o dist/knockout-dragula.min.js dist/knockout-dragula.js",
