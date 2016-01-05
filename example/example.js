@@ -25,6 +25,9 @@
     },
     afterDelete: function() {
       console.log(arguments);
+    },
+    remove: function(item) {
+      this.items1.remove(item);
     }
   };
 

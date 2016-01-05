@@ -59,6 +59,7 @@
   function registerEvents(drake) {
     drake.on('drop', onDrop);
     drake.on('remove', onRemove);
+    drake.on('cancel', onCancel);
   }
 
   function removeContainer(group, container) {
@@ -112,6 +113,19 @@
     if (afterDelete) {
       afterDelete(item, sourceIndex, sourceItems);
     }
+  }
+
+  function onCancel(el, container) {
+    var item = _ko['default'].dataFor(el);
+    var sourceItems = getData(container, LIST_KEY);
+    var sourceIndex = sourceItems.indexOf(item);
+
+    // Remove the element added by dragula, let Knockout manage the DOM
+    container.removeChild(el);
+
+    // Remove and re-add the item to froce knockout to re-render it
+    sourceItems.splice(sourceIndex, 1);
+    sourceItems.splice(sourceIndex, 0, item);
   }
 
   _ko['default'].bindingHandlers.dragula = {

@@ -4,7 +4,7 @@
 <title>knockout-dragula</title>
 
 <div class="parent" data-bind="dragula: { data: items1, group: 'test', afterDrop: afterDrop }">
-    <div class="child" data-bind="text: name"></div>
+    <div class="child"><span data-bind="text: name"></span><button data-bind="click: $parent.remove.bind($parent)">Remove</button></div>
 </div>
 <div class="parent" data-bind="dragula: { data: items2, group: 'test', afterDelete: afterDelete }">
     <div class="child" data-bind="text: name"></div>
