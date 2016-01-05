@@ -17,12 +17,12 @@
   },
   "homepage": "https://github.com/cbcrc/knockout-dragula",
   "dependencies": {
-    "dragula": "3.0.3",
-    "knockout": "3.3.0"
+    "dragula": "^3.0.3",
+    "knockout": "^3.3.0"
   },
   "devDependencies": {
     "babel": "^5.8.21",
     "jshint": "^2.8.0",
-    "uglify-js": "^2.4.24"
+    "uglify-js": "^2.6.1"
   }
 }
