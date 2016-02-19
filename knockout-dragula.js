@@ -3,6 +3,7 @@ import dragula from 'dragula';
 
 const FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
 const LIST_KEY = 'ko_dragula_list';
+const BIND_KEY = 'ko_dragula_bind';
 const AFTER_DROP_KEY = 'ko_dragula_afterDrop';
 const AFTER_DELETE_KEY = 'ko_dragula_afterDelete';
 
@@ -67,6 +68,8 @@ function createDrake(element, options) {
 
 function onDrop(el, target, source) {
   let item = ko.dataFor(el);
+  let context = ko.contextFor(el);
+  let bindTo = getData(source, BIND_KEY);
   let sourceItems = getData(source, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
   let targetItems = getData(target, LIST_KEY);
@@ -80,6 +83,11 @@ function onDrop(el, target, source) {
 
   let afterDrop = getData(target, AFTER_DROP_KEY);
   if (afterDrop) {
+    if (typeof bindTo === 'undefined') {
+      afterDrop = afterDrop.bind(context);
+    } else {
+      afterDrop = afterDrop.bind(context[bindTo]);
+    }
     afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
   }
 }
@@ -116,6 +124,7 @@ ko.bindingHandlers.dragula = {
     let foreachOptions = makeForeachOptions(valueAccessor, options);
 
     setData(element, LIST_KEY, foreachOptions.data);
+    setData(element, BIND_KEY, options.bind);
     setData(element, AFTER_DROP_KEY, options.afterDrop);
     setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
@@ -137,6 +146,7 @@ ko.bindingHandlers.dragula = {
     let foreachOptions = makeForeachOptions(valueAccessor, options);
 
     setData(element, LIST_KEY, foreachOptions.data);
+    setData(element, BIND_KEY, options.bind);
     setData(element, AFTER_DROP_KEY, options.afterDrop);
     setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
