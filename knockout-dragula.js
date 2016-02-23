@@ -81,8 +81,7 @@ function onDrop(el, target, source) {
 
   let afterDrop = getData(target, AFTER_DROP_KEY);
   if (afterDrop) {
-    afterDrop = afterDrop.bind(context);
-    afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
+    afterDrop.call(context, item, sourceIndex, sourceItems, targetIndex, targetItems);
   }
 }
 
@@ -90,12 +89,13 @@ function onRemove(el, container) {
   let item = ko.dataFor(el);
   let sourceItems = getData(container, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
+  let context = ko.contextFor(el);
 
   sourceItems.splice(sourceIndex, 1);
 
   let afterDelete = getData(container, AFTER_DELETE_KEY);
   if (afterDelete) {
-    afterDelete(item, sourceIndex, sourceItems);
+    afterDelete.call(context, item, sourceIndex, sourceItems);
   }
 }
 

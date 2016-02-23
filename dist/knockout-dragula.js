@@ -99,8 +99,7 @@
 
     var afterDrop = getData(target, AFTER_DROP_KEY);
     if (afterDrop) {
-      afterDrop = afterDrop.bind(context);
-      afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
+      afterDrop.call(context, item, sourceIndex, sourceItems, targetIndex, targetItems);
     }
   }
 
@@ -108,12 +107,13 @@
     var item = _ko['default'].dataFor(el);
     var sourceItems = getData(container, LIST_KEY);
     var sourceIndex = sourceItems.indexOf(item);
+    var context = _ko['default'].contextFor(el);
 
     sourceItems.splice(sourceIndex, 1);
 
     var afterDelete = getData(container, AFTER_DELETE_KEY);
     if (afterDelete) {
-      afterDelete(item, sourceIndex, sourceItems);
+      afterDelete.call(context, item, sourceIndex, sourceItems);
     }
   }
 
