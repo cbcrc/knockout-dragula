@@ -42,3 +42,9 @@ The callback gets passed 5 arguments:
 * `sourceItems`: The array from which the item was dragged.
 * `targetIndex`: The new position of the item in `targetItems`.
 * `targetItems`: The array into which the item was dropped.
+
+Note: By default the binding-context is bound to the afterDrop function. If you want to bind something else, say the parent, you could write like this:
+
+```html
+    <div data-bind="dragula: { data: items, afterDrop: afterDrop.bind($parent) }">
+```

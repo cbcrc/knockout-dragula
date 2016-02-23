@@ -85,6 +85,7 @@
 
   function onDrop(el, target, source) {
     var item = _ko['default'].dataFor(el);
+    var context = _ko['default'].contextFor(el);
     var sourceItems = getData(source, LIST_KEY);
     var sourceIndex = sourceItems.indexOf(item);
     var targetItems = getData(target, LIST_KEY);
@@ -98,6 +99,7 @@
 
     var afterDrop = getData(target, AFTER_DROP_KEY);
     if (afterDrop) {
+      afterDrop = afterDrop.bind(context);
       afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
     }
   }

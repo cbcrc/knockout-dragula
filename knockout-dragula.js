@@ -67,6 +67,7 @@ function createDrake(element, options) {
 
 function onDrop(el, target, source) {
   let item = ko.dataFor(el);
+  let context = ko.contextFor(el);
   let sourceItems = getData(source, LIST_KEY);
   let sourceIndex = sourceItems.indexOf(item);
   let targetItems = getData(target, LIST_KEY);
@@ -80,6 +81,7 @@ function onDrop(el, target, source) {
 
   let afterDrop = getData(target, AFTER_DROP_KEY);
   if (afterDrop) {
+    afterDrop = afterDrop.bind(context);
     afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
   }
 }
