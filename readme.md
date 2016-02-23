@@ -45,5 +45,6 @@ The callback gets passed 5 arguments:
 
 Note: By default the binding-context is bound to the afterDrop function. If you want to bind something else, say the parent, you could write like this:
 
+```html
     <div data-bind="dragula: { data: items, afterDrop: afterDrop.bind($parent) }">
-P
+```
