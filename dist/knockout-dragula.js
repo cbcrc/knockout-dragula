@@ -21,7 +21,6 @@
 
   var FOREACH_OPTIONS_PROPERTIES = ['afterAdd', 'afterMove', 'afterRender', 'as', 'beforeRemove'];
   var LIST_KEY = 'ko_dragula_list';
-  var BIND_KEY = 'ko_dragula_bind';
   var AFTER_DROP_KEY = 'ko_dragula_afterDrop';
   var AFTER_DELETE_KEY = 'ko_dragula_afterDelete';
 
@@ -87,7 +86,6 @@
   function onDrop(el, target, source) {
     var item = _ko['default'].dataFor(el);
     var context = _ko['default'].contextFor(el);
-    var bindTo = getData(source, BIND_KEY);
     var sourceItems = getData(source, LIST_KEY);
     var sourceIndex = sourceItems.indexOf(item);
     var targetItems = getData(target, LIST_KEY);
@@ -101,11 +99,7 @@
 
     var afterDrop = getData(target, AFTER_DROP_KEY);
     if (afterDrop) {
-      if (typeof bindTo === 'undefined') {
-        afterDrop = afterDrop.bind(context);
-      } else {
-        afterDrop = afterDrop.bind(context[bindTo]);
-      }
+      afterDrop = afterDrop.bind(context);
       afterDrop(item, sourceIndex, sourceItems, targetIndex, targetItems);
     }
   }
@@ -142,7 +136,6 @@
       var foreachOptions = makeForeachOptions(valueAccessor, options);
 
       setData(element, LIST_KEY, foreachOptions.data);
-      setData(element, BIND_KEY, options.bind);
       setData(element, AFTER_DROP_KEY, options.afterDrop);
       setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
@@ -170,7 +163,6 @@
       var foreachOptions = makeForeachOptions(valueAccessor, options);
 
       setData(element, LIST_KEY, foreachOptions.data);
-      setData(element, BIND_KEY, options.bind);
       setData(element, AFTER_DROP_KEY, options.afterDrop);
       setData(element, AFTER_DELETE_KEY, options.afterDelete);
 
