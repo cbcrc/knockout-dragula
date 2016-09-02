@@ -16,6 +16,7 @@
     "url": "https://github.com/cbcrc/knockout-dragula/issues"
   },
   "homepage": "https://github.com/cbcrc/knockout-dragula",
+  "main": "dist/knockout-dragula.js",
   "dependencies": {
     "dragula": "^3.0.3",
     "knockout": "^3.3.0"
