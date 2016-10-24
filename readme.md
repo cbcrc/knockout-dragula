@@ -9,6 +9,11 @@ Using bower:
 bower install knockout-dragula --save
 ```
 
+Using NPM:
+```
+npm install knockout-dragula --save
+```
+
 ## Usage
 The `dragula` binding replaces `foreach`:
 ```html
